@@ -1,4 +1,4 @@
-﻿namespace OrderService.Models
+﻿namespace SharedModels
 {
     public class OrderPlacedEvent
     {

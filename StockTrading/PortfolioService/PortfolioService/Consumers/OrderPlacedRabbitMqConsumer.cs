@@ -7,6 +7,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Connections;
 using System.Threading.Channels;
+using SharedModels;
 
 namespace PortfolioService.Consumers
 {
@@ -168,18 +169,5 @@ namespace PortfolioService.Consumers
         }
     }
 
-    //TODO: Move the OrderPlacedEvent to SharedModels
 
-    #region Temporary
-    //Temporary solution to save time. Would otherwise create a separate class library project for shared models
-    public class OrderPlacedEvent
-    {
-        public required string UserId { get; set; }
-        public required string Ticker { get; set; }
-        public int Quantity { get; set; }
-        public required string Side { get; set; }
-        public decimal Price { get; set; }
-        public DateTime OrderDate { get; set; }
-    }
-    #endregion
 }

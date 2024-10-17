@@ -3,6 +3,7 @@ using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
 using OrderService.Services;
+using SharedModels;
 
 namespace OrderService.Consumers
 {
@@ -104,18 +105,4 @@ namespace OrderService.Consumers
             base.Dispose();
         }
     }
-
-    //TODO: Move the PriceUpdate to SharedModels
-
-    #region Temporary
-    //Temporary solution to save time. Would otherwise create a separate class library project for shared models
-    public class PriceUpdate
-    {
-        public DateTime Timestamp { get; set; } // Timestamp of the price update
-
-        public required string Ticker { get; set; } // Stock ticker (e.g., AAPL)
-
-        public decimal Price { get; set; } // New stock price        
-    }
-    #endregion
 }

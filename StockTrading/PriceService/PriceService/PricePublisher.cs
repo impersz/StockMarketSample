@@ -1,5 +1,6 @@
 ﻿using MassTransit;
 using RabbitMQ.Client;
+using SharedModels;
 using System;
 using System.Text;
 using System.Text.Json;

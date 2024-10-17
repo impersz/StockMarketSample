@@ -23,4 +23,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="SharedModels">
+      <HintPath>..\..\SharedModels\SharedModels\bin\Debug\net8.0\SharedModels.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

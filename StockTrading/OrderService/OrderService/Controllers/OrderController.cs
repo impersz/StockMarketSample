@@ -8,6 +8,7 @@ using OrderService.Services;
 using RabbitMQ.Client;
 using System.Text.Json;
 using System.Text;
+using SharedModels;
 
 namespace OrderService.Controllers
 {

@@ -6,6 +6,7 @@ using PortfolioService.Data;
 using Microsoft.EntityFrameworkCore;
 using PortfolioService.Services;
 using System.Threading.Channels;
+using SharedModels;
 
 namespace PortfolioService.Consumers
 {
@@ -112,17 +113,5 @@ namespace PortfolioService.Consumers
         }
     }
 
-    //TODO: Move the PriceUpdate to SharedModels
 
-    #region Temporary
-    //Temporary solution to save time. Would otherwise create a separate class library project for shared models
-    public class PriceUpdate
-    {
-        public DateTime Timestamp { get; set; } // Timestamp of the price update
-
-        public required string Ticker { get; set; } // Stock ticker (e.g., AAPL)
-
-        public decimal Price { get; set; } // New stock price        
-    }
-    #endregion
 }

@@ -13,4 +13,10 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="SharedModels">
+      <HintPath>..\..\SharedModels\SharedModels\bin\Debug\net8.0\SharedModels.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>
