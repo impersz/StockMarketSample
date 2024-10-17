@@ -5,6 +5,8 @@ using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Connections;
+using System.Threading.Channels;
 
 namespace PortfolioService.Consumers
 {
@@ -12,20 +14,26 @@ namespace PortfolioService.Consumers
     {
         private readonly ILogger<OrderPlacedRabbitMqConsumer> _logger;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ConnectionFactory _connectionFactory;
 
         public OrderPlacedRabbitMqConsumer(ILogger<OrderPlacedRabbitMqConsumer> logger, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
+
+            // Ensure the factory uses persistent connections
+            _connectionFactory = new ConnectionFactory
+            {
+                HostName = "localhost",
+                DispatchConsumersAsync = true // Allow async consumer methods
+            };
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             return Task.Run(() =>
             {
-
-                var factory = new ConnectionFactory { HostName = "localhost" };
-                using var connection = factory.CreateConnection();
+                using var connection = _connectionFactory.CreateConnection();
                 using var channel = connection.CreateModel();
 
                 channel.QueueDeclare(queue: "order-placed-queue",
@@ -34,22 +42,37 @@ namespace PortfolioService.Consumers
                                      autoDelete: false,
                                      arguments: null);
 
-                var consumer = new EventingBasicConsumer(channel);
+                var consumer = new AsyncEventingBasicConsumer(channel);
 
                 consumer.Received += async (model, ea) =>
                 {
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
 
-                    _logger.LogInformation($"Received message: {message}");
+                    try
+                    {
+                        _logger.LogInformation($"Received message: {message}");
 
-                    var orderPlaced = JsonSerializer.Deserialize<OrderPlacedEvent>(message);
+                        var orderPlaced = JsonSerializer.Deserialize<OrderPlacedEvent>(message);
 
-                    await HandleOrderPlacedAsync(orderPlaced);
+                        await HandleOrderPlacedAsync(orderPlaced);
+
+                        // Acknowledge the message only after successful processing
+                        channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                    }
+                    catch (Exception ex) 
+                    {
+                        // Log the error and potentially requeue the message or move to DLQ
+                        _logger.LogError(ex, $"Error processing message: {message}");
+
+                        // Optionally Nack or requeue the message based on the failure
+                        channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true);
+                    }
+                   
                 };
 
                 channel.BasicConsume(queue: "order-placed-queue",
-                                     autoAck: true,
+                                     autoAck: false,  // Ensure manual acknowledgement
                                      consumer: consumer);
 
                 // Keep the background service alive while listening for messages
@@ -94,11 +117,11 @@ namespace PortfolioService.Consumers
             }
             else //User already has a portfolio
             {
+                // Find if the user already has this stock in their holdings
+                var stockHolding = portfolio.StockHoldings.FirstOrDefault(sh => sh.Ticker == message.Ticker);
+
                 if (message.Side.ToLower() == "buy")
                 {
-                    // Find if the user already has this stock in their holdings
-                    var stockHolding = portfolio.StockHoldings.FirstOrDefault(sh => sh.Ticker == message.Ticker);
-
                     if (stockHolding == null) // No stocks and buying -> add stocks
                     {
                         stockHolding = new StockHolding
@@ -112,17 +135,14 @@ namespace PortfolioService.Consumers
                     else // Have stocks and buying -> Add the Quantity
                     {
                         // Update the quantity and price for an existing stock holding
-                        stockHolding.Quantity += message.Quantity;
-
-                        // Recalculate portfolio value               
-                        portfolio.TotalValue += message.Quantity * message.Price;
+                        stockHolding.Quantity += message.Quantity;                        
                     }
-                }
-                else if (message.Side == "sell")
-                {
-                    // Find if the user already has this stock in their holdings
-                    var stockHolding = portfolio.StockHoldings.FirstOrDefault(sh => sh.Ticker == message.Ticker);
 
+                    // Recalculate portfolio value               
+                    portfolio.TotalValue += message.Quantity * message.Price;
+                }
+                else if (message.Side.ToLower() == "sell")
+                {
                     //No stocks and selling -> error
                     if (stockHolding == null)
                     {
@@ -130,21 +150,17 @@ namespace PortfolioService.Consumers
                     }
                     else // Have stocks and selling -> Extract the Quantity
                     {
-                        // Update the quantity and price for an existing stock holding
-                        stockHolding.Quantity -= message.Quantity;
-                        if (stockHolding.Quantity >= 0)
-                        {
-                            // Recalculate portfolio value               
-                            portfolio.TotalValue -= message.Quantity * message.Price;
-
-                            //Even at 0 quantity will still keep the record for now.
-                        }
-                        else
+                        if(stockHolding.Quantity < message.Quantity)
                         {
                             throw new InvalidOperationException($"Cannot sell {message.Quantity} shares of {message.Ticker} because the user only owns {stockHolding.Quantity}.");
                         }
-                    }
 
+                        // Update the quantity and price for an existing stock holding
+                        stockHolding.Quantity -= message.Quantity;
+
+                        // Recalculate portfolio value               
+                        portfolio.TotalValue -= message.Quantity * message.Price;
+                    }
                 }
             }
 

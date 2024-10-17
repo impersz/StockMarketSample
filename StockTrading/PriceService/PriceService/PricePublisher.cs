@@ -9,14 +9,12 @@ namespace PriceService
 {
     public class PricePublisher
     {
-        private readonly IBus _bus;
-
-        public PricePublisher(IBus bus)
+        public PricePublisher()
         {
-            _bus = bus;
+            
         }
 
-        public async Task PublishPriceUpdateAsync(string ticker, decimal price)
+        public void PublishPriceUpdate(string ticker, decimal price)
         {
             var priceUpdate = new PriceUpdate
             {
@@ -24,21 +22,6 @@ namespace PriceService
                 Ticker = ticker,
                 Price = price
             };
-
-            //try
-            //{
-            //    // Publish the price update to RabbitMQ
-            //    await _bus.Publish(priceUpdate);
-
-            //    // Log the price update (optional for debugging)
-            //    Console.WriteLine($"A Published price update: {ticker} - {price}");
-            //}
-            //catch (Exception ex) 
-            //{
-            //    Console.WriteLine($"EXCEPTION on publishing: {ticker} - {price}");
-            //}
-
-
 
             var factory = new ConnectionFactory { HostName = "localhost" };
             using var connection = factory.CreateConnection();
@@ -60,7 +43,7 @@ namespace PriceService
                                  basicProperties: null,
                                  body: body);
 
-            Console.WriteLine($"B Published price update: {ticker} - {price}");
+            Console.WriteLine($"Published price update: {ticker} - {price}");
         }
     }
 }

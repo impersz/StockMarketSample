@@ -14,7 +14,7 @@ namespace PriceService
             _logger = logger;
 
             // Initialize stock prices
-            _stockPrices = new Dictionary<string, decimal>
+            _stockPrices = new Dictionary<string, decimal> //Approx prices based on 2024 market
             {
                 { "AAPL", 150m },
                 { "TSLA", 300m },
@@ -33,14 +33,14 @@ namespace PriceService
                     var newPrice = GenerateNewPrice(ticker);
 
                     // Call the PricePublisher to publish the price update
-                    await _pricePublisher.PublishPriceUpdateAsync(ticker, newPrice);
+                    _pricePublisher.PublishPriceUpdate(ticker, newPrice);
 
                     Console.WriteLine($"Published price for {ticker}: {newPrice}");
                     _logger.LogInformation("Price updated for ticker: {ticker}", ticker);
                 }
                 
                 // Wait for X seconds before generating and publishing the next round of prices
-                await Task.Delay(5000, stoppingToken);
+                await Task.Delay(1000, stoppingToken);
             }            
         }
 
