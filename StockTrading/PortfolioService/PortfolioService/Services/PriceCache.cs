@@ -13,7 +13,7 @@ namespace PortfolioService.Services
 
         public decimal GetPrice(string ticker)
         {
-            return _latestPrices.TryGetValue(ticker, out var price) ? price : 1m;
+            return _latestPrices.TryGetValue(ticker, out var price) ? price : 0m;
         }
     }
 }

@@ -28,7 +28,8 @@ namespace PriceService.Services
                     var price = new Price
                     {
                         Ticker = ticker,
-                        CurrentPrice = _random.Next(100, 600), // Random price between 100 and 600 based on appropriate price ranges as of 2024. Revisit later.
+                        // Random price between 100 and 600 based on appropriate price ranges as of 2024. Revisit later.
+                        CurrentPrice = _random.Next(100, 600), 
                         Timestamp = DateTime.UtcNow
                     };
 
@@ -38,7 +39,7 @@ namespace PriceService.Services
                     Console.WriteLine($"Published price for {ticker}: {price.CurrentPrice}");
                 }
 
-                await Task.Delay(10000, stoppingToken); // Wait for 1 second before generating new prices. // Temporary 10seconds
+                await Task.Delay(10000, stoppingToken); // Wait for X seconds before generating new prices. // Temporary 10seconds
             }
         }
     }

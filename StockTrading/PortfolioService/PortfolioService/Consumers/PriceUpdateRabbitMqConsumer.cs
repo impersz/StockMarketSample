@@ -13,18 +13,12 @@ namespace PortfolioService.Consumers
         private readonly ILogger<PriceUpdateRabbitMqConsumer> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly PriceCache _priceCache;
-        //private readonly PortfolioDbContext _dbContext;
 
-
-        public PriceUpdateRabbitMqConsumer(ILogger<PriceUpdateRabbitMqConsumer> logger, IServiceProvider serviceProvider 
-            ,PriceCache priceCache
-            //,PortfolioDbContext dbContext
-            )
+        public PriceUpdateRabbitMqConsumer(ILogger<PriceUpdateRabbitMqConsumer> logger, IServiceProvider serviceProvider ,PriceCache priceCache)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
             _priceCache = priceCache;
-            //_dbContext = dbContext;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -54,7 +48,6 @@ namespace PortfolioService.Consumers
                     // Deserialize the message (assuming the message is JSON)
                     var priceUpdate = JsonSerializer.Deserialize<PriceUpdate>(message);
 
-                    // Handle the price update (e.g., store the price for order processing)
                     HandlePriceUpdate(priceUpdate);
                 };
 
@@ -74,25 +67,21 @@ namespace PortfolioService.Consumers
         {
 
             _priceCache.UpdatePrice(priceUpdate.Ticker, priceUpdate.Price);
-
-
-            //var portfolios = await _dbContext.Portfolios.Include(p => p.StockHoldings).ToListAsync();
-
-            ////TODO: refactor, getting all portfolios in memory and then updating them is not sufficent, will revist
-            //foreach (var portfolio in portfolios)
-            //{
-            //    var stockHolding = portfolio.StockHoldings.FirstOrDefault(sh => sh.Ticker == message.Ticker);
-            //    if (stockHolding != null)
-            //    {
-            //        // Update the total value based on the new price
-            //        portfolio.TotalValue = stockHolding.Quantity * message.Price;
-            //    }
-            //}
-
-            //await _dbContext.SaveChangesAsync();
-
-            ////_priceCache.UpdatePrice(priceUpdate.Ticker, priceUpdate.Price);
-            //_logger.LogInformation($"Processed price update for {priceUpdate.Ticker}: {priceUpdate.Price}");
+            _logger.LogInformation($"Processed price update for {priceUpdate.Ticker}: {priceUpdate.Price}");
         }
     }
+
+    //TODO: Move the PriceUpdate to SharedModels
+
+    #region Temporary
+    //Temporary solution to save time. Would otherwise create a separate class library project for shared models
+    public class PriceUpdate
+    {
+        public DateTime Timestamp { get; set; } // Timestamp of the price update
+
+        public required string Ticker { get; set; } // Stock ticker (e.g., AAPL)
+
+        public decimal Price { get; set; } // New stock price        
+    }
+    #endregion
 }

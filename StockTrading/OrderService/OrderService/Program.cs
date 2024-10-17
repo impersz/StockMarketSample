@@ -16,7 +16,7 @@ builder.Services.AddDbContext<OrderDbContext>(options =>
 builder.Services.AddSingleton<PriceCache>();
 
 
-builder.Services.AddHostedService<PriceUpdateRabbitMqConsumerService>();
+builder.Services.AddHostedService<PriceUpdateRabbitMqConsumer>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

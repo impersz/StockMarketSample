@@ -12,15 +12,11 @@ namespace PortfolioService.Consumers
     {
         private readonly ILogger<OrderPlacedRabbitMqConsumer> _logger;
         private readonly IServiceProvider _serviceProvider;
-        //private readonly PortfolioDbContext _dbContext;
 
-        public OrderPlacedRabbitMqConsumer(ILogger<OrderPlacedRabbitMqConsumer> logger, IServiceProvider serviceProvider
-            //,PortfolioDbContext dbContext
-            )
+        public OrderPlacedRabbitMqConsumer(ILogger<OrderPlacedRabbitMqConsumer> logger, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
-            //_dbContext = dbContext;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -45,13 +41,10 @@ namespace PortfolioService.Consumers
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
 
-                    // Log the received message (this can be replaced with actual processing logic)
                     _logger.LogInformation($"Received message: {message}");
 
-                    // Deserialize the message (assuming the message is JSON)
                     var orderPlaced = JsonSerializer.Deserialize<OrderPlacedEvent>(message);
 
-                    // Handle the order placed - update the portfolio data
                     await HandleOrderPlacedAsync(orderPlaced);
                 };
 
@@ -73,6 +66,7 @@ namespace PortfolioService.Consumers
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
 
+            //TODO: Move logic to separate methods for Buying and Selling, make more readable
 
             var portfolio = await dbContext.Portfolios.Include(p => p.StockHoldings).FirstOrDefaultAsync(p => p.UserId == message.UserId);
 
@@ -119,7 +113,6 @@ namespace PortfolioService.Consumers
                     {
                         // Update the quantity and price for an existing stock holding
                         stockHolding.Quantity += message.Quantity;
-                        //stockHolding.Price = price; // Update to latest price
 
                         // Recalculate portfolio value               
                         portfolio.TotalValue += message.Quantity * message.Price;
@@ -158,4 +151,19 @@ namespace PortfolioService.Consumers
             await dbContext.SaveChangesAsync();
         }
     }
+
+    //TODO: Move the OrderPlacedEvent to SharedModels
+
+    #region Temporary
+    //Temporary solution to save time. Would otherwise create a separate class library project for shared models
+    public class OrderPlacedEvent
+    {
+        public required string UserId { get; set; }
+        public required string Ticker { get; set; }
+        public int Quantity { get; set; }
+        public required string Side { get; set; }
+        public decimal Price { get; set; }
+        public DateTime OrderDate { get; set; }
+    }
+    #endregion
 }

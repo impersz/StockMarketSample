@@ -6,13 +6,13 @@ using OrderService.Services;
 
 namespace OrderService.Consumers
 {
-    public class PriceUpdateRabbitMqConsumerService : BackgroundService
+    public class PriceUpdateRabbitMqConsumer : BackgroundService
     {
-        private readonly ILogger<PriceUpdateRabbitMqConsumerService> _logger;
+        private readonly ILogger<PriceUpdateRabbitMqConsumer> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly PriceCache _priceCache;
 
-        public PriceUpdateRabbitMqConsumerService(ILogger<PriceUpdateRabbitMqConsumerService> logger, IServiceProvider serviceProvider, PriceCache priceCache)
+        public PriceUpdateRabbitMqConsumer(ILogger<PriceUpdateRabbitMqConsumer> logger, IServiceProvider serviceProvider, PriceCache priceCache)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
@@ -64,8 +64,6 @@ namespace OrderService.Consumers
 
         private void HandlePriceUpdate(PriceUpdate priceUpdate)
         {
-            // Save the price to a cache or handle the logic for later use
-            // Example: _orderService.SetLatestPrice(priceUpdate);
             _priceCache.UpdatePrice(priceUpdate.Ticker, priceUpdate.Price);
             _logger.LogInformation($"Processed price update for {priceUpdate.Ticker}: {priceUpdate.Price}");
         }

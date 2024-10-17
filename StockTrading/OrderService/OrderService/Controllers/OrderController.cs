@@ -33,6 +33,8 @@ namespace OrderService.Controllers
         [HttpPost("add/{userId}")]
         public async Task<IActionResult> PlaceOrder(string userId, [FromBody] OrderDto orderDto)
         {
+            //TODO: Do some validation for Side especially
+
             // Get the latest price from the cache
             var price = _priceCache.GetPrice(orderDto.Ticker);
 
@@ -48,18 +50,15 @@ namespace OrderService.Controllers
                 UserId = userId,
                 Ticker = orderDto.Ticker,
                 Side = orderDto.Side,
-                Quantity = orderDto.Quantity
+                Quantity = orderDto.Quantity,
+                Price = price,
+                OrderDate = DateTime.UtcNow
             };
-
-            //order.UserId = userId;
-            order.Price = price;
-            order.OrderDate = DateTime.UtcNow;
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            // Log the order (optional for debugging)
-            Console.WriteLine($"Db Saved order: {userId} - {order.Ticker} - {order.Quantity} - {order.Price}");
+            Console.WriteLine($"Order saved to Db: {userId} - {order.Ticker} - {order.Quantity} - {order.Price}");
 
             // Create an OrderPlacedEvent
             var orderPlacedEvent = new OrderPlacedEvent
