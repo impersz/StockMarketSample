@@ -1,0 +1,55 @@
+version: '3.4'
+
+services:
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"   # RabbitMQ default port
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - my_stockmarket_network  # Connect to the custom network
+
+  priceservice:
+    build:
+      context: ./PriceService
+      dockerfile: Dockerfile
+    ports:
+      - "5001:80"
+    depends_on:
+      - rabbitmq
+    networks:
+      - my_stockmarket_network  # Connect to the custom network
+
+  orderservice:
+    build:
+      context: ./OrderService
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"  # Adjust port as needed
+    depends_on:
+      - rabbitmq
+    networks:
+      - my_stockmarket_network  # Connect to the custom network
+
+  # Add PostgreSQL service
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: ordersdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - my_stockmarket_network  # Connect to the custom network
+
+volumes:
+  pgdata:
+
+networks:
+  my_stockmarket_network:  # Define the custom network here
