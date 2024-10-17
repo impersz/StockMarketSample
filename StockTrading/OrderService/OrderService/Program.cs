@@ -15,24 +15,8 @@ builder.Services.AddDbContext<OrderDbContext>(options =>
 // Register PriceCache as a singleton
 builder.Services.AddSingleton<PriceCache>();
 
-// MassTransit and RabbitMQ configuration
-builder.Services.AddMassTransit(x =>
-{
-    x.AddConsumer<PriceUpdateConsumer>();
 
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host("localhost", "/", h => { });
-
-        cfg.ReceiveEndpoint("price-update-queue", e =>
-        {
-            e.ConfigureConsumer<PriceUpdateConsumer>(context);
-            //e.Consumer<PriceUpdateConsumer>(context);
-        });
-    });
-
-    x.SetKebabCaseEndpointNameFormatter();
-});
+builder.Services.AddHostedService<PriceUpdateRabbitMqConsumerService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

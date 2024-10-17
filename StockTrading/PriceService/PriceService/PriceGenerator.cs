@@ -39,8 +39,8 @@ namespace PriceService
                     _logger.LogInformation("Price updated for ticker: {ticker}", ticker);
                 }
                 
-                // Wait for 1 second before generating and publishing the next round of prices
-                await Task.Delay(60000, stoppingToken);
+                // Wait for X seconds before generating and publishing the next round of prices
+                await Task.Delay(5000, stoppingToken);
             }            
         }
 

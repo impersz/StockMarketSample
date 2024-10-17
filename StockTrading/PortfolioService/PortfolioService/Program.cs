@@ -2,6 +2,7 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using PortfolioService.Consumers;
 using PortfolioService.Data;
+using PortfolioService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,29 +12,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<PortfolioDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PortfolioDb")));
 
-// MassTransit and RabbitMQ configuration
-builder.Services.AddMassTransit(x =>
-{
-    x.AddConsumer<PriceUpdateConsumer>();
-    x.AddConsumer<OrderPlacedConsumer>();
 
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host("localhost", "/", h => { });
+builder.Services.AddHostedService<OrderPlacedRabbitMqConsumer>();
+builder.Services.AddHostedService<PriceUpdateRabbitMqConsumer>();
 
-        cfg.ReceiveEndpoint("order-placed-queue", e =>
-        {
-            e.ConfigureConsumer<OrderPlacedConsumer>(context);
-        });
 
-        cfg.ReceiveEndpoint("price-update-queue", e =>
-        {
-            e.ConfigureConsumer<PriceUpdateConsumer>(context);
-        });
-    });
-
-    x.SetKebabCaseEndpointNameFormatter();
-});
+builder.Services.AddSingleton<PriceCache>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
